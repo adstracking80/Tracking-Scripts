@@ -1,0 +1,87 @@
+<script>
+(function() {
+    var milestones = [25, 50, 75, 90];
+    var videoPlayers = {};
+
+    // 1. Load the YouTube API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    window.onYouTubeIframeAPIReady = function() {
+        var iframes = document.querySelectorAll('iframe[src*="youtube.com"]');
+        iframes.forEach(function(iframe, index) {
+            // Ensure JS API is enabled for tracking
+            var src = iframe.getAttribute('src');
+            if (src.indexOf('enablejsapi=1') === -1) {
+                iframe.src = src + (src.indexOf('?') === -1 ? '?' : '&') + 'enablejsapi=1';
+            }
+
+            var id = iframe.id || 'yt-player-' + index;
+            iframe.id = id;
+
+            videoPlayers[id] = {
+                player: new YT.Player(id, {
+                    events: {
+                        'onStateChange': onPlayerStateChange
+                    }
+                }),
+                milestonesFired: []
+            };
+        });
+    };
+
+    function onPlayerStateChange(event) {
+        var player = event.target;
+        var videoData = player.getVideoData();
+        var duration = player.getDuration();
+        var videoUrl = player.getVideoUrl();
+        var videoTitle = videoData.title;
+        var videoId = videoData.video_id;
+        var playerId = player.getIframe().id;
+
+        var pushEvent = function(action, pct) {
+            window.dataLayer.push({
+                'event': 'video_engagement',
+                'video_action': action,
+                'video_title': videoTitle,
+                'video_id': videoId,
+                'video_percent': pct || 0,
+                'video_duration': duration,
+                'video_url': videoUrl,
+                'video_provider': 'youtube'
+            });
+        };
+
+        if (event.data == YT.PlayerState.PLAYING) {
+            pushEvent('start');
+            
+            // Track Progress Milestones
+            var checkProgress = setInterval(function() {
+                if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+                    clearInterval(checkProgress);
+                    return;
+                }
+                var currentTime = player.getCurrentTime();
+                var currentPct = Math.floor((currentTime / duration) * 100);
+
+                milestones.forEach(function(m) {
+                    if (currentPct >= m && videoPlayers[playerId].milestonesFired.indexOf(m) === -1) {
+                        videoPlayers[playerId].milestonesFired.push(m);
+                        pushEvent('progress', m);
+                    }
+                });
+            }, 1000);
+        }
+
+        if (event.data == YT.PlayerState.PAUSED) {
+            pushEvent('pause');
+        }
+
+        if (event.data == YT.PlayerState.ENDED) {
+            pushEvent('complete', 100);
+        }
+    }
+})();
+</script>
