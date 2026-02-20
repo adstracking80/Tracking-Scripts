@@ -44,22 +44,22 @@ Pushes clean structured event to dataLayer
 STEP 1 — Create Data Layer Variables
 Create the following Data Layer Variables:
 
-Name: DL – Video Action
+Name: DLV || Video Action
 Data Layer Variable Name: video_action
 
-Name: DL – Video Title
+Name: DLV || Video Title
 Data Layer Variable Name: video_title
 
-Name: DL – Video ID
+Name: DLV || Video ID
 Data Layer Variable Name: video_id
 
-Name: DL – Video Percent
+Name: DLV || Video Percent
 Data Layer Variable Name: video_percent
 
-Name: DL – Video Duration
+Name: DLV || Video Duration
 Data Layer Variable Name: video_duration
 
-Name: DL – Video URL
+Name: DLV || Video URL
 Data Layer Variable Name: video_url
 
 STEP 2 — Create Trigger
@@ -90,12 +90,12 @@ video_complete → when video_action equals complete
 Add Event Parameters:
 Parameter Name → Value
 
-video_title → {{DL – Video Title}}
-video_id → {{DL – Video ID}}
-video_percent → {{DL – Video Percent}}
-video_duration → {{DL – Video Duration}}
-video_url → {{DL – Video URL}}
-video_action → {{DL – Video Action}}
+video_title → {{DLV || Video Title}}
+video_id → {{DLV || Video ID}}
+video_percent → {{DLV || Video Percent}}
+video_duration → {{DLV || Video Duration}}
+video_url → {{DLV || Video URL}}
+video_action → {{DLV || Video Action}}
 
 Attach Custom Event Trigger.
 
