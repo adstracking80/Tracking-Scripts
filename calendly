@@ -1,0 +1,102 @@
+<script>
+(function() {
+
+  function getQueryParams() {
+    var params = {};
+    var query = window.location.search.substring(1);
+    var pairs = query.split('&');
+
+    for (var i = 0; i < pairs.length; i++) {
+      var pair = pairs[i].split('=');
+      if (!pair[0]) continue;
+
+      var key = decodeURIComponent(pair[0]);
+      var value = pair[1] ? pair[1].replace(/\+/g, ' ') : '';
+      value = decodeURIComponent(value || '');
+
+      params[key] = value;
+    }
+    return params;
+  }
+
+  function getParam(params, possibleKeys) {
+    for (var i = 0; i < possibleKeys.length; i++) {
+      if (params[possibleKeys[i]] && params[possibleKeys[i]] !== '') {
+        return params[possibleKeys[i]];
+      }
+    }
+    return '';
+  }
+
+  var params = getQueryParams();
+
+  var email = getParam(params, [
+    'invitee_email',
+    'email',
+    'user_email',
+    'e'
+  ]);
+
+  var phone = getParam(params, [
+    'text_reminder_number',
+    'phone',
+    'user_phone',
+    'mobile'
+  ]);
+
+  var fullName = getParam(params, [
+    'invitee_full_name',
+    'full_name',
+    'name'
+  ]);
+
+  var firstName = getParam(params, [
+    'invitee_first_name',
+    'first_name'
+  ]);
+
+  var lastName = getParam(params, [
+    'invitee_last_name',
+    'last_name'
+  ]);
+
+  var eventName = getParam(params, [
+    'event_type_name',
+    'event_name',
+    'event'
+  ]);
+
+  var eventStart = getParam(params, [
+    'event_start_time',
+    'start_time'
+  ]);
+
+  var eventEnd = getParam(params, [
+    'event_end_time',
+    'end_time'
+  ]);
+
+  // Only push if email exists (prevents empty fires)
+  if (email) {
+
+    window.dataLayer = window.dataLayer || [];
+
+    window.dataLayer.push({
+      event: 'appointment_booked',
+      booking_source: 'thank_you_page',
+      user_email: email,
+      user_phone: phone,
+      user_full_name: fullName,
+      user_first_name: firstName,
+      user_last_name: lastName,
+      booking_event_name: eventName,
+      booking_start_time: eventStart,
+      booking_end_time: eventEnd,
+      page_location: window.location.href
+    });
+
+    console.log('Universal booking event pushed:', email);
+  }
+
+})();
+</script>
