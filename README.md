@@ -1,4 +1,10 @@
-🛸 Universal Tracking Scripts
+██     ██  ███    ███  ██████  
+██     ██  ████  ████  ██   ██ 
+██  █  ██  ██ ████ ██  ██████  
+██ ███ ██  ██  ██  ██  ██   ██ 
+ ███ ███   ██      ██  ██   ██
+ 
+ 🛸 Universal Tracking Scripts
 The lightweight, plug-and-play toolkit for cross-platform event tracking.
 
 Tracking user behavior shouldn't be a headache. This repository provides a curated collection of universal tracking scripts designed to work seamlessly across Google Analytics 4, Meta Pixel, Mixpanel, and custom internal APIs.
