@@ -1,0 +1,27 @@
+<script>
+
+(function() {
+  var inputData = {};
+  window.addEventListener('message', function (event) {
+    if(Object.prototype.toString.call(event.data) === '[object Array]') {
+        var inputJSON = event.data[2];
+
+        if(inputJSON && inputJSON.includes('full_address') && inputJSON.includes('customer_id') && inputJSON.includes('full_name') && inputJSON.includes('email')) {
+            var inputObject = JSON.parse(inputJSON);
+            inputData = inputObject
+            dataLayer.push({
+                event: 'ghl_form_submit',
+                inputs: inputObject
+            });
+        }
+
+        if(event.data[0] === 'msgsndr-booking-complete') {
+            dataLayer.push({
+                event: 'ghl_booking_complete',
+                inputs: inputData
+            });
+        }
+    }
+  });
+})();
+</script>
