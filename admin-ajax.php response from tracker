@@ -1,0 +1,38 @@
+<script>
+(function() {
+    var origin_send = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.send = function(data) {
+        var self = this;
+        this.addEventListener('load', function() {
+            if (this.responseURL.includes('admin-ajax.php')) {
+                var payload = {};
+
+                // 1. Capture the Request Data (The Form Inputs)
+                if (data instanceof FormData) {
+                    data.forEach(function(value, key) {
+                        payload[key] = value;
+                    });
+                } else if (typeof data === 'string') {
+                    // Fallback for stringified payloads
+                    try {
+                        payload = JSON.parse(data);
+                    } catch (e) {
+                        payload = data; 
+                    }
+                }
+
+                // 2. Push everything to the Data Layer
+                window.dataLayer = window.dataLayer || [];
+                window.dataLayer.push({
+                    'event': 'ajax_form_submit',
+                    'form_status': this.status, // 200 = Success
+                    'form_url': this.responseURL,
+                    'form_inputs': payload, // This contains your wpforms[fields]
+                    'server_response': this.responseText
+                });
+            }
+        });
+        origin_send.apply(this, arguments);
+    };
+})();
+</script>
