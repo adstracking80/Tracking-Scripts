@@ -1,0 +1,39 @@
+<script>
+(function() {
+  // Use 'capture' phase to ensure we catch the event before other scripts stop propagation
+  document.addEventListener('submit', function(event) {
+    var form = event.target;
+    
+    // Ensure we are looking at a form
+    if (form.tagName !== 'FORM') return;
+
+    var formData = {};
+    var elements = form.elements;
+
+    for (var i = 0; i < elements.length; i++) {
+      var field = elements[i];
+      
+      // Skip fields without names, disabled fields, and buttons/sensitive types
+      if (!field.name || field.disabled || ['file', 'reset', 'submit', 'button', 'password'].indexOf(field.type) > -1) continue;
+
+      if (field.type === 'checkbox' || field.type === 'radio') {
+        if (field.checked) {
+          formData[field.name] = field.value;
+        }
+      } else {
+        formData[field.name] = field.value;
+      }
+    }
+
+    // Push to Data Layer
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      'event': 'form_submit_data',
+      'form_id': form.id || 'none',
+      'form_class': form.className || 'none',
+      'form_type': 'universal_collector',
+      'form_fields': formData
+    });
+  }, true); 
+})();
+</script>
