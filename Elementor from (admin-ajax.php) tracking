@@ -28,7 +28,7 @@
     // Push to Data Layer
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
-      'event': 'form_submit_data',
+      'event': 'Lead_Form_Submit',
       'form_id': form.id || 'none',
       'form_class': form.className || 'none',
       'form_type': 'universal_collector',
