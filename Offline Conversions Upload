@@ -1,0 +1,32 @@
+// Format Google Ads Timestamp
+// Set the timezone to an Australian city (Sydney, Melbourne, Brisbane, etc.)
+const targetTimeZone = 'Australia/Sydney';
+
+const now = new Date();
+
+// Format date parts using Internationalization API
+const formatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: targetTimeZone,
+  year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', second: '2-digit',
+  hour12: false
+});
+
+const parts = formatter.formatToParts(now);
+const p = Object.fromEntries(parts.map(p => [p.type, p.value]));
+
+// Calculate the timezone offset in Google Ads format (+HHMM or -HHMM)
+const tzFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: targetTimeZone,
+  timeZoneName: 'longOffset'
+});
+const tzParts = tzFormatter.formatToParts(now);
+const offsetStr = tzParts.find(p => p.type === 'timeZoneName').value; // e.g. "GMT+11:00"
+
+// Convert "GMT+11:00" to "+1100"
+const adsOffset = offsetStr.replace('GMT', '').replace(':', '');
+
+// Final Google Ads format: yyyy-mm-dd hh:mm:ss+zzzz
+const ads_timestamp = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}${adsOffset}`;
+
+return { ads_timestamp: ads_timestamp };
