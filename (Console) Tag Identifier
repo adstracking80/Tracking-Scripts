@@ -1,0 +1,110 @@
+(() => {
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+
+  // ---- Collect script srcs
+  const scriptSrcs = [...document.scripts].map(s => s.src || "").filter(Boolean);
+
+  // ---- Detect GTM container IDs
+  const gtmFromWindow = (() => {
+    try { return Object.keys(window.google_tag_manager || {}).filter(k => k.startsWith("GTM-")); }
+    catch { return []; }
+  })();
+
+  const gtmFromScripts = scriptSrcs
+    .filter(src => src.includes("googletagmanager.com/gtm.js?id=GTM-"))
+    .map(src => (src.match(/id=(GTM-[A-Z0-9]+)/) || [])[1]);
+
+  const gtmIDs = uniq([...gtmFromWindow, ...gtmFromScripts]);
+
+  // ---- Detect GA4 Measurement IDs (G-XXXX)
+  const ga4FromScripts = scriptSrcs
+    .filter(src => src.includes("googletagmanager.com/gtag/js?id=G-"))
+    .map(src => (src.match(/id=(G-[A-Z0-9]+)/) || [])[1]);
+
+  // ---- Detect Google Ads IDs (AW-XXXX)
+  const adsFromScripts = scriptSrcs
+    .filter(src => src.includes("googletagmanager.com/gtag/js?id=AW-"))
+    .map(src => (src.match(/id=(AW-[0-9]+)/) || [])[1]);
+
+  // ---- Scan dataLayer for gtag-style commands: ['config','G-...'] / ['config','AW-...']
+  const dl = window.dataLayer;
+  const dlArray = Array.isArray(dl) ? dl : [];
+
+  const gtagConfigs = dlArray
+    .filter(x => Array.isArray(x) && (x[0] === "config" || x[0] === "js"))
+    .map(x => x[1])
+    .filter(id => typeof id === "string");
+
+  const ga4FromDL = gtagConfigs.filter(id => id.startsWith("G-"));
+  const adsFromDL = gtagConfigs.filter(id => id.startsWith("AW-"));
+
+  // ---- Find conversion labels in dataLayer: send_to: "AW-XXXX/label"
+  const sendToValues = dlArray
+    .map(x => {
+      if (Array.isArray(x) && x[0] === "event" && x[2] && typeof x[2] === "object") return x[2].send_to;
+      if (x && typeof x === "object") return x.send_to;
+      return null;
+    })
+    .flat()
+    .filter(Boolean);
+
+  const sendToAds = uniq(
+    (Array.isArray(sendToValues) ? sendToValues : [sendToValues])
+      .flatMap(v => (typeof v === "string" ? [v] : []))
+      .filter(v => v.includes("AW-"))
+  );
+
+  // ---- Check if gtag function exists
+  const hasGtagFn = typeof window.gtag === "function";
+
+  // ---- Output summary
+  const summary = [
+    { Tag: "GTM", Present: gtmIDs.length > 0, IDs: gtmIDs.join(", ") || "-" },
+    { Tag: "GA4 (G-)", Present: uniq([...ga4FromScripts, ...ga4FromDL]).length > 0, IDs: uniq([...ga4FromScripts, ...ga4FromDL]).join(", ") || "-" },
+    { Tag: "Google Ads (AW-)", Present: uniq([...adsFromScripts, ...adsFromDL]).length > 0, IDs: uniq([...adsFromScripts, ...adsFromDL]).join(", ") || "-" },
+    { Tag: "gtag() function", Present: hasGtagFn, IDs: hasGtagFn ? "available" : "not found" },
+    { Tag: "Ads send_to labels", Present: sendToAds.length > 0, IDs: sendToAds.join(", ") || "-" },
+  ];
+
+  console.log("✅ Tag Detection Result");
+  console.table(summary);
+
+  // Extra: show helpful hints
+  if (!gtmIDs.length) {
+    console.warn("No GTM container detected (GTM-XXXX). If you expected one, check if GTM is blocked, consent is preventing load, or you're on the wrong page.");
+  }
+  if (!uniq([...ga4FromScripts, ...ga4FromDL]).length) {
+    console.warn("No GA4 Measurement ID detected (G-XXXX). It might fire only after consent or after a specific action.");
+  }
+  if (!uniq([...adsFromScripts, ...adsFromDL]).length) {
+    console.warn("No Google Ads ID detected (AW-XXXX). It might fire only on conversion events or after consent.");
+  }
+
+  // Optional: quick live monitor for new dataLayer pushes
+  window.__TAG_CHECK__ = window.__TAG_CHECK__ || {};
+  if (!window.__TAG_CHECK__.hooked && Array.isArray(window.dataLayer) && typeof window.dataLayer.push === "function") {
+    const originalPush = window.dataLayer.push.bind(window.dataLayer);
+    window.__TAG_CHECK__.hooked = true;
+    window.__TAG_CHECK__.unhook = () => {
+      window.dataLayer.push = originalPush;
+      window.__TAG_CHECK__.hooked = false;
+      console.log("🟢 dataLayer monitor stopped.");
+    };
+
+    window.dataLayer.push = function () {
+      const args = [...arguments];
+      try {
+        const last = args[0];
+        if (Array.isArray(last) && (last[0] === "config" || last[0] === "event")) {
+          console.log("📩 dataLayer gtag cmd:", last);
+        } else if (last && typeof last === "object" && (last.event || last.send_to)) {
+          console.log("📩 dataLayer obj:", last);
+        }
+      } catch {}
+      return originalPush(...args);
+    };
+
+    console.log("🟡 dataLayer monitor is ON. Run actions (pageview/click/form submit) then watch Console.");
+    console.log("To stop: __TAG_CHECK__.unhook()");
+  }
+})();
