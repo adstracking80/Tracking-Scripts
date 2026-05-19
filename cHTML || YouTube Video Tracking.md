@@ -5,8 +5,8 @@
  ███ ███   ██      ██  ██   ██
  
 
-**YouTube Video Tracking via GTM → GA4 → Google Ads
-****Overview**
+**YouTube Video Tracking via GTM → GA4 → Google Ads**
+**Overview**
 This setup tracks YouTube iframe video engagement and sends data to:
 Google Tag Manager (GTM)
 Google Analytics 4 (GA4)
