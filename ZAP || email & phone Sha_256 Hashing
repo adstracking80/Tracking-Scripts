@@ -1,0 +1,25 @@
+const crypto = require('crypto');
+
+// Get email from step 1 and formatted phone from step 2
+const email = inputData.email || '';
+const phone = inputData.phone || '';
+
+// SHA256 hash function for Google Ads
+const hashSHA256 = (text) => {
+  if (!text) return '';
+  // Normalize: lowercase and trim whitespace
+  const normalized = text.toLowerCase().trim();
+  // Create SHA256 hash
+  return crypto.createHash('sha256').update(normalized).digest('hex');
+};
+
+// Hash email and phone
+const email_hashed = hashSHA256(email);
+const phone_hashed = hashSHA256(phone);
+
+return { 
+  email_hashed: email_hashed,
+  phone_hashed: phone_hashed,
+  email_original: email,
+  phone_original: phone
+};
