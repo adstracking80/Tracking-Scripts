@@ -1,0 +1,50 @@
+// Universal Gravity Forms Data Capture Script
+(function() {
+  console.log('=== GRAVITY FORMS UNIVERSAL SCANNER ===\n');
+  
+  // Find all Gravity Forms on page
+  var forms = document.querySelectorAll('form[id*="gform_"]');
+  console.log('Found ' + forms.length + ' Gravity Form(s)\n');
+  
+  forms.forEach(function(form) {
+    var formId = form.id;
+    console.log('--- FORM: ' + formId + ' ---');
+    
+    // Get all input fields
+    var inputs = form.querySelectorAll('input, textarea, select');
+    var formData = {};
+    
+    inputs.forEach(function(input) {
+      var name = input.name;
+      var value = input.value;
+      var type = input.type;
+      var id = input.id;
+      
+      // Skip hidden and empty fields
+      if (type !== 'hidden' && value && value.trim() !== '') {
+        console.log(id + ' [' + name + '] = ' + value);
+        formData[name] = value;
+      }
+    });
+    
+    console.log('\nJSON Format:');
+    console.log(JSON.stringify(formData, null, 2));
+    console.log('\n');
+  });
+  
+  // Show current dataLayer
+  console.log('=== CURRENT DATALAYER ===');
+  console.log(window.dataLayer || 'No dataLayer found');
+  console.log('\n');
+  
+  // Push test event
+  console.log('=== PUSHING TEST LEAD EVENT ===');
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    'event': 'test_lead',
+    'timestamp': new Date().toISOString(),
+    'message': 'Test event from console'
+  });
+  console.log('Test event pushed!');
+  console.log(window.dataLayer);
+})();
