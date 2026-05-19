@@ -1,0 +1,79 @@
+<script>
+  (function() {
+    // 1. Helper function to send the data to Zapier once everything is collected
+    function sendToZapier(ipAddress) {
+      // Safely capture the timezone (e.g., "Asia/Dhaka")
+      var userTimezone = "";
+      try {
+        userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      } catch (e) {
+        userTimezone = "Unknown";
+      }
+
+      // Construct the complete nested payload
+      var payload = {
+        wmr: {
+          // Appointment Details
+          booking_source: "{{DLV || booking_source}}",
+          booking_event_name: "{{DLV || booking_event_name}}",
+          booking_start_time: "{{DLV || booking_start_time}}",
+          booking_end_time: "{{DLV || booking_end_time}}",
+          
+          // User/Customer Details
+          user_full_name: "{{DLV || user_full_name}}",
+          user_email: "{{DLV || user_email}}",
+          user_phone: "{{DLV || user_phone}}",
+          
+          // Traffic/UTM Details
+          utm_source: "{{DLV || traffic_data.utm_source}}",
+          utm_medium: "{{DLV || traffic_data.utm_medium}}",
+          utm_campaign: "{{DLV || traffic_data.utm_campaign}}",
+          utm_term: "{{DLV || traffic_data.utm_term}}",
+          utm_content: "{{DLV || traffic_data.utm_content}}",
+          gclid: "{{DLV || traffic_data.gclid}}",
+
+          // System / Session Metadata
+          user_ip: ipAddress,
+          user_agent: navigator.userAgent,
+          user_timezone: userTimezone
+        }
+      };
+
+      var url = "https://hooks.zapier.com/hooks/catch/11350163/4otx40u/";
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", url, true);
+      
+      // text/plain bypasses the CORS preflight check seamlessly
+      xhr.setRequestHeader("Content-Type", "text/plain");
+
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log("%c[GTM Webhook Success]: Complete payload received by Zapier!", "background: #2ecc71; color: #fff; padding: 4px; border-radius: 3px;");
+            console.log("Status:", xhr.status);
+            console.log("Sent Payload:", payload);
+          } else {
+            console.error("%c[GTM Webhook Error]: Fired but failed!", "background: #e74c3c; color: #fff; padding: 4px; border-radius: 3px;");
+          }
+        }
+      };
+
+      xhr.send(JSON.stringify(payload));
+    }
+
+    // 2. Fetch the Public IP first, then trigger the webhook transmission
+    fetch('https://api.ipify.org?format=json')
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        // IP fetched successfully -> Send payload with IP
+        sendToZapier(data.ip);
+      })
+      .catch(function(error) {
+        // Fallback: IP fetch failed or blocked -> Send payload with an empty IP string
+        console.warn("IP fetch failed, sending webhook with metadata only:", error);
+        sendToZapier("");
+      });
+  })();
+</script>
