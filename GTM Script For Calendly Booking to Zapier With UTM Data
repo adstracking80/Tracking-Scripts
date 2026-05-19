@@ -1,0 +1,46 @@
+<script>
+  (function() {
+    // 1. Construct your structured payload
+    var payload = {
+      wmr: {
+        booking_source: "{{DLV || booking_source}}",
+        booking_event_name: "{{DLV || booking_event_name}}",
+        booking_start_time: "{{DLV || booking_start_time}}",
+        booking_end_time: "{{DLV || booking_end_time}}",
+        user_full_name: "{{DLV || user_full_name}}",
+        user_email: "{{DLV || user_email}}",
+        user_phone: "{{DLV || user_phone}}",
+        utm_source: "{{DLV || traffic_data.utm_source}}",
+        utm_medium: "{{DLV || traffic_data.utm_medium}}",
+        utm_campaign: "{{DLV || traffic_data.utm_campaign}}",
+        utm_term: "{{DLV || traffic_data.utm_term}}",
+        utm_content: "{{DLV || traffic_data.utm_content}}",
+        gclid: "{{DLV || traffic_data.gclid}}"
+      }
+    };
+
+    var url = "https://hooks.zapier.com/hooks/catch/11350163/4otx40u/";
+    var xhr = new XMLHttpRequest();
+
+    xhr.open("POST", url, true);
+    
+    // Changing the header to plain/text bypasses the CORS preflight check entirely
+    xhr.setRequestHeader("Content-Type", "text/plain");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.log("%c[GTM Webhook Success]: CORS bypassed. Sent to Zapier!", "background: #2ecc71; color: #fff; padding: 4px; border-radius: 3px;");
+          console.log("Zapier Status:", xhr.status);
+          console.log("Payload:", payload);
+        } else {
+          console.error("%c[GTM Webhook Error]: Fired but failed!", "background: #e74c3c; color: #fff; padding: 4px; border-radius: 3px;");
+          console.error("HTTP Status:", xhr.status);
+        }
+      }
+    };
+
+    // Send the JSON string wrapped cleanly
+    xhr.send(JSON.stringify(payload));
+  })();
+</script>
