@@ -1,0 +1,95 @@
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = '__gl_traffic_data__';
+
+  // 1. Extract URL Parameters
+  function getUrlParams() {
+    var params = {};
+    var search = window.location.search;
+    if (!search) return params;
+
+    search.substring(1).split('&').forEach(function (part) {
+      var item = part.split('=');
+      if (item[0]) {
+        params[item[0]] = decodeURIComponent(item[1] || '');
+      }
+    });
+
+    return params;
+  }
+
+  // 2. Sync Traffic Data (Store UTMs in sessionStorage)
+  function syncTraffic() {
+    var query = getUrlParams();
+    var stored = {};
+
+    try {
+      stored = JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {};
+    } catch (e) {
+      stored = {};
+    }
+
+    var keys = [
+      'utm_source',
+      'utm_medium',
+      'utm_campaign',
+      'utm_term',
+      'utm_content',
+      'gclid',
+      'campaignid',
+      'adgroupid',
+      'keyword'
+    ];
+
+    keys.forEach(function (key) {
+      if (query[key]) {
+        stored[key] = query[key];
+      }
+    });
+
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    return stored;
+  }
+
+  var finalTraffic = syncTraffic();
+  var urlParams = getUrlParams();
+
+  window.dataLayer = window.dataLayer || [];
+
+  // --- EVERY PAGE LOAD: Capture UTMs ---
+  window.dataLayer.push({
+    event: 'traffic_source_capture',
+    traffic_data: finalTraffic
+  });
+
+  // --- THANK YOU PAGE: Send RAW User Data ---
+  if (window.location.pathname.indexOf('/thank-you/') !== -1) {
+
+    window.dataLayer.push({
+      event: 'UTM_&_User_data',
+
+      user_data: {
+        email: urlParams.EmailAddress || '',
+        phone: urlParams.Phone || ''
+      },
+
+      traffic_source: {
+        utm_source: finalTraffic.utm_source || '(direct)',
+        utm_medium: finalTraffic.utm_medium || '(none)',
+        utm_campaign: finalTraffic.utm_campaign || '',
+        gclid: finalTraffic.gclid || ''
+      },
+
+      google_ads_info: {
+        campaign_id: finalTraffic.campaignid || '',
+        adgroup_id: finalTraffic.adgroupid || '',
+        keyword: finalTraffic.keyword || ''
+      }
+    });
+
+  }
+
+})();
+</script>
